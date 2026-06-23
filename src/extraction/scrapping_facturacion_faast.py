@@ -62,6 +62,9 @@ def exports_csv(usuario: str, password: str) -> bool:
         # Ir manualmente al módulo de reportes (manteniendo sesión)
         driver.get("https://toquea.faast.pe/faast-reporting/reports#/")
 
+        driver.save_screenshot("captura.png")
+        print("se tomo screen")
+
         # ====================
         # NAVEGAR A VOLUMEN OPERACIONAL
         # ====================
@@ -166,7 +169,7 @@ def exports_csv(usuario: str, password: str) -> bool:
 
 
 if __name__ == "__main__":
-    usuario = "dany.churapa@ajegroup.com"
-    password = "Faast123"
+    usuario = "luiggi.chia@ajegroup.com"
+    password = "m1VJQ3!8u)t*"
 
     resultado = exports_csv(usuario, password)
