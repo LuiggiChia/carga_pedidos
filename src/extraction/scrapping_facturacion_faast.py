@@ -162,8 +162,9 @@ def exports_csv(usuario: str, password: str) -> bool:
 
     finally:
         driver.quit()
+    
 if __name__ == "__main__":
-    usuario = "dany.churapa@ajegroup.com"
+    usuario = "hugo.fernandez@ajegroup.com"
     password = "Faast123"
 
     resultado = exports_csv(usuario, password)
