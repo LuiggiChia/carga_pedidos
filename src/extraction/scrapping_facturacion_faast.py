@@ -22,7 +22,8 @@ def inner_playwrite(
     context = browser.new_context()
     page = context.new_page()
     try:
-
+        bronze_data_path = os.path.join(BASE_DIR, "data/bronze")
+        
         page.goto("https://toquea.faast.pe/")
         page.set_default_timeout(90000)
         page.get_by_role("textbox", name="Nombre de Usuario").click()
@@ -58,6 +59,7 @@ def inner_playwrite(
         frame.locator("#ReportViewerControl_ctl04_ctl00").click(force=True)
         page.wait_for_timeout(6000)
         logger.info("-- Se ve informe")
+        frame.locator("#ReportViewerControl_ctl05_ctl04_ctl00_ButtonImg").click(force=True)
         with page.expect_download() as download_info:
             frame.get_by_role("link", name="CSV (comma delimited)").click()
         download = download_info.value
