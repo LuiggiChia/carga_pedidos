@@ -41,5 +41,5 @@ if __name__ == "__main__":
 
     print(f"Procesando reporte para la fecha {fecha_de_reporte.strftime('%Y-%m-%d')}")
 
-    result_export = exports_csv(fecha_de_reporte, bronze_data_path, logger)
+    result_export = exports_csv(fecha_de_reporte, project_path, logger)
     print(result_export)

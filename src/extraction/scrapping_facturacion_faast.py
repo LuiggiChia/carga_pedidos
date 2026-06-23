@@ -61,7 +61,8 @@ def inner_playwrite(
         with page.expect_download() as download_info:
             frame.get_by_role("link", name="CSV (comma delimited)").click()
         download = download_info.value
-        download.save_as(f'{BASE_DIR}/{dia_de_reporte.strftime("%d_%m_%Y")}.csv')
+        bronze_data_path = os.path.join(BASE_DIR, "data/bronze")
+        download.save_as(f'{bronze_data_path}/{dia_de_reporte.strftime("%d_%m_%Y")}.csv')
         logger.info("-- Se guardo archivo")
         # ---------------------
         context.close()
