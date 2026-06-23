@@ -34,10 +34,10 @@ if __name__ == "__main__":
     fecha_de_reporte = get_date_of_arg()
 
     # Leer credenciales y crear folder
-    credentials = load_google_credentials(project_path, logger)
-    drive_service = create_drive_service(credentials, logger)
-    folder_id = create_folder(drive_service, fecha_de_reporte.strftime("%Y%m%d"), logger)
+    # credentials = load_google_credentials(project_path, logger)
+    # drive_service = create_drive_service(credentials, logger)
+    # folder_id = create_folder(drive_service, fecha_de_reporte.strftime("%Y%m%d"), logger)
 
     print(f"Procesando reporte para la fecha {fecha_de_reporte.strftime('%Y-%m-%d')}")
-    result_export = exports_csv(fecha_de_reporte)
+    result_export = exports_csv(fecha_de_reporte, logger)
     print(result_export)
