@@ -26,6 +26,7 @@ def exports_csv(usuario: str, password: str) -> bool:
     chrome_options = Options()
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("--headless=new")
 
     prefs = {
         "download.default_directory": str(download_dir),
