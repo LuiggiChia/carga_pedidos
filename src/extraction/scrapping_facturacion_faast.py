@@ -9,6 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import datetime
 from pathlib import Path
+import traceback
 
 
 def exports_csv(usuario: str, password: str) -> bool:
@@ -156,10 +157,19 @@ def exports_csv(usuario: str, password: str) -> bool:
 
         return True
 
-    except Exception as e:
-        print(f"Error durante la exportación: {e}")
-        return False
+    # except Exception as e:
+    #     print(f"Error durante la exportación: {e}")
+    #    return False
 
+    except Exception as e:
+        
+        print("=" * 80)
+        print("TIPO:", type(e).__name__)
+        print("ERROR:", repr(e))
+        print("=" * 80)
+        traceback.print_exc()
+        return False
+    
     finally:
         driver.quit()
     
