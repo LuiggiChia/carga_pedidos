@@ -1,15 +1,21 @@
-import re
+import os
+import json
 from datetime import datetime
-from playwright.sync_api import Playwright, sync_playwright, expect
+from playwright.sync_api import Playwright, sync_playwright
 
 
 def inner_playwrite(
-    playwright: Playwright,
-    usuario: str,
-    password: str,
-    dia_de_reporte: datetime,
-    BASE_DIR: str,
+    playwright: Playwright, dia_de_reporte: datetime, BASE_DIR: str, logger
 ) -> bool:
+
+    faast_credentials_path = os.path.join(BASE_DIR, "config/faast_credentials.json")
+    with open(faast_credentials_path, "r", encoding="utf-8") as file:
+        faast_credentials = json.load(file)
+
+    usuario = faast_credentials["usuario"]
+    password = faast_credentials["password"]
+
+    logger.info("Credenciales - Faast cargadas correctamente")
 
     fecha_inicio = dia_de_reporte.strftime("%d/%m/%Y")
     browser = playwright.chromium.launch(headless=True)
@@ -25,10 +31,10 @@ def inner_playwrite(
         page.get_by_role("textbox", name="Contraseña").fill(password)
         page.get_by_role("textbox", name="Contraseña").press("Enter")
         # page.goto("https://toquea.faast.pe/faast-reporting/reports#/")
-        print("-- Ingreso a la web")
+        logger.info("-- Ingreso a la web")
         page.locator('[id="2"]').get_by_text("Reportes", exact=True).click()
         page.locator("a").filter(has_text="Reportes Backoffice").click()
-        print("-- Entro a reporte")
+        logger.info("-- Entro a reporte")
         page.get_by_role("listitem").filter(
             has_text="FacturacionVer Detalles"
         ).get_by_role("button").click()
@@ -51,26 +57,26 @@ def inner_playwrite(
         frame.locator("#ReportViewerControl_ctl04_ctl00").scroll_into_view_if_needed()
         frame.locator("#ReportViewerControl_ctl04_ctl00").click(force=True)
         page.wait_for_timeout(6000)
-        print("-- Se ve informe")
+        logger.info("-- Se ve informe")
         with page.expect_download() as download_info:
             frame.get_by_role("link", name="CSV (comma delimited)").click()
         download = download_info.value
         download.save_as(f'{BASE_DIR}/{dia_de_reporte.strftime("%d_%m_%Y")}.csv')
-        print("-- Se guardo archivo")
+        logger.info("-- Se guardo archivo")
         # ---------------------
         context.close()
         browser.close()
         return True
     except Exception as e:
-        print(f"Error durante la exportación: {e}")
+        logger.error(f"Error durante la exportación: {e}")
         return False
     finally:
-        print("Finally")
+        logger.info("Finally")
         # ---------------------
         context.close()
         browser.close()
 
 
-def exports_csv(usuario: str, password: str, dia_de_reporte: datetime) -> bool:
+def exports_csv(dia_de_reporte: datetime, logger) -> bool:
     with sync_playwright() as playwright:
-        return inner_playwrite(playwright, usuario, password, dia_de_reporte)
+        return inner_playwrite(playwright, dia_de_reporte, logger)
