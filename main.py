@@ -1,6 +1,7 @@
 import os
 import logging
 from datetime import datetime
+from playwright.sync_api import sync_playwright
 
 from src.extraction.scrapping_facturacion_faast import exports_csv
 from src.utils.date_utils import get_date_of_arg
@@ -39,5 +40,7 @@ if __name__ == "__main__":
     # folder_id = create_folder(drive_service, fecha_de_reporte.strftime("%Y%m%d"), logger)
 
     print(f"Procesando reporte para la fecha {fecha_de_reporte.strftime('%Y-%m-%d')}")
-    result_export = exports_csv(fecha_de_reporte, logger)
+
+    with sync_playwright() as p:
+        result_export = exports_csv(p, fecha_de_reporte, logger)
     print(result_export)
