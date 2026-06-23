@@ -61,7 +61,7 @@ def inner_playwrite(
         logger.info("-- Se ve informe")
         frame.locator("#ReportViewerControl_ctl05_ctl04_ctl00_ButtonImg").click(force=True)
         with page.expect_download() as download_info:
-            frame.get_by_role("link", name="CSV (comma delimited)").click()
+            frame.get_by_role("link", name="CSV (delimitado por comas)").click()
         download = download_info.value
         bronze_data_path = os.path.join(BASE_DIR, "data/bronze")
         download.save_as(f'{bronze_data_path}/{dia_de_reporte.strftime("%d_%m_%Y")}.csv')
