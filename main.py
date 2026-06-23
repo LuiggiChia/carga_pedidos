@@ -11,7 +11,6 @@ from src.utils.google_utils import (
 )
 
 project_path = os.path.dirname(os.path.abspath(__file__))
-bronze_data_path = os.path.join(project_path, "data/bronze")
 credentials_path = os.path.join(project_path, "config", "faast_credentials.json")
 logs_path = os.path.join(project_path, "logs")
 log_filename = f"{datetime.now().strftime('%Y%m%d')}.log"

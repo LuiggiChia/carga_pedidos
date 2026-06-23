@@ -16,7 +16,6 @@ def inner_playwrite(
     password = faast_credentials["password"]
 
     logger.info("Credenciales - Faast cargadas correctamente")
-    fecha_inicio = dia_de_reporte.strftime("%d/%m/%Y")
     browser = playwright.chromium.launch(headless=True)
     context = browser.new_context()
     page = context.new_page()
@@ -28,10 +27,10 @@ def inner_playwrite(
         page.get_by_role("textbox", name="Nombre de Usuario").press("Tab")
         page.get_by_role("textbox", name="Contraseña").fill(password)
         page.get_by_role("textbox", name="Contraseña").press("Enter")
-        print("-- Ingreso a la web")
+        logger.info("-- Ingreso a la web")
         page.locator("[id=\"2\"]").get_by_text("Reportes", exact=True).click()
         page.locator("a").filter(has_text="Reportes Backoffice").click()
-        print("-- Entro a reporte")
+        logger.info("-- Entro a reporte")
         page.get_by_role("listitem").filter(has_text="FacturacionVer Detalles").get_by_role("button").click()
         page.locator("iframe").content_frame.get_by_role("textbox", name="Desde").click()
         input_desde_hasta = dia_de_reporte.strftime("%m/%d/%Y")
@@ -45,7 +44,7 @@ def inner_playwrite(
         frame.locator("#ReportViewerControl_ctl04_ctl00").scroll_into_view_if_needed()
         frame.locator("#ReportViewerControl_ctl04_ctl00").click(force=True)
         page.wait_for_timeout(6000)
-        print("-- Se ve informe")
+        logger.info("-- Se ve informe")
         frame.locator("#ReportViewerControl_ctl05_ctl04_ctl00_ButtonImg").click(force=True)
         with page.expect_download() as download_info:
             frame.get_by_role(
@@ -54,8 +53,8 @@ def inner_playwrite(
             ).click()
 
         download = download_info.value
-        bronze_data_path = os.path.join(BASE_DIR, "data/bronze")
-        download.save_as(f'{bronze_data_path}/{dia_de_reporte.strftime("%d_%m_%Y")}.csv')
+        raw_data_path = os.path.join(BASE_DIR, "data/raw")
+        download.save_as(f'{raw_data_path}/{dia_de_reporte.strftime("%d_%m_%Y")}.csv')
 
         # ---------------------
         context.close()
