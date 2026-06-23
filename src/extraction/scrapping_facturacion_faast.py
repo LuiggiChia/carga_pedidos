@@ -77,6 +77,6 @@ def inner_playwrite(
         browser.close()
 
 
-def exports_csv(dia_de_reporte: datetime, logger) -> bool:
+def exports_csv(dia_de_reporte: datetime, BASE_DIR: str) -> bool:
     with sync_playwright() as playwright:
-        return inner_playwrite(playwright, dia_de_reporte, logger)
+        return inner_playwrite(playwright, dia_de_reporte, BASE_DIR)
