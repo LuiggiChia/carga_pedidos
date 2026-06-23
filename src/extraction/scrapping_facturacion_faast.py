@@ -21,7 +21,7 @@ def exports_csv(usuario: str, password: str) -> bool:
     chrome_options = Options()
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    # chrome_options.add_argument("--headless=new")  # Actívalo si no necesitas interfaz gráfica
+    chrome_options.add_argument("--headless=new")  # Actívalo si no necesitas interfaz gráfica
 
     # Lanzar Chrome más rápido
     driver = webdriver.Chrome(
