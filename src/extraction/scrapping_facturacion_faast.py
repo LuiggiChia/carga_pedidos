@@ -37,10 +37,11 @@ def exports_csv(usuario: str, password: str) -> bool:
 
     chrome_options.add_experimental_option("prefs", prefs)
 
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
-        options=chrome_options,
-    )
+    # driver = webdriver.Chrome(
+    #     service=Service(ChromeDriverManager().install()),
+    #     options=chrome_options,
+    # )
+    driver = webdriver.Chrome(options=chrome_options)
 
     try:
         # ====================
