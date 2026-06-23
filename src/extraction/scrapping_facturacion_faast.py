@@ -173,3 +173,10 @@ def exports_csv(usuario: str, password: str) -> bool:
         finally:
             context.close()
             browser.close()
+
+
+if __name__ == '__main__':
+    usuario = "hugo.fernandez@ajegroup.com"
+    password = "Faast123"
+    
+    resultado = exports_csv(usuario, password)
