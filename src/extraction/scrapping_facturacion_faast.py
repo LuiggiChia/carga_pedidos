@@ -1,168 +1,175 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-import time
 import datetime
+import traceback
+from pathlib import Path
+
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 
 def exports_csv(usuario: str, password: str) -> bool:
 
-    fecha_inicio = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime(
-        "%d/%m/%Y"
-    )
-    # fecha_inicio = '15/06/2025'
+    fecha_inicio = (
+        datetime.datetime.now() - datetime.timedelta(days=1)
+    ).strftime("%d/%m/%Y")
 
     print("inicio")
-    chrome_options = Options()
-    chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--start-maximized")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 
-    # Lanzar Chrome más rápido
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=chrome_options
-    )
+    download_dir = Path("data/raw").resolve()
+    download_dir.mkdir(parents=True, exist_ok=True)
 
-    try:
-        # ====================
-        # LOGIN
-        # ====================
-        driver.get("https://toquea.faast.pe/faast-reporting/reports#/")
-
-        wait = WebDriverWait(driver, 20)
-
-        # Esperar inputs
-        wait.until(EC.presence_of_element_located((By.ID, "usuario")))
-
-        driver.find_element(By.ID, "usuario").send_keys(usuario)
-        driver.find_element(By.ID, "contraseña").send_keys(password)
-
-        # Clic en Ingresar
-        boton_ingresar = wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//button[contains(text(),'Ingresar')]")
-            )
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+            ],
         )
-        boton_ingresar.click()
 
-        time.sleep(30)
-        # Ir manualmente al módulo de reportes (manteniendo sesión)
-        driver.get("https://toquea.faast.pe/faast-reporting/reports#/")
+        context = browser.new_context(
+            accept_downloads=True,
+            viewport={"width": 1920, "height": 1080},
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+        )
 
-        # ====================
-        # NAVEGAR A VOLUMEN OPERACIONAL
-        # ====================
+        page = context.new_page()
 
-        # Esperar carga de lista de reportes
-        li_volumen = WebDriverWait(driver, 20).until(
-            EC.visibility_of_element_located(
-                (
-                    By.XPATH,
-                    "//li[contains(@class, 'list-group-item')][.//text()[contains(., 'Facturacion')]]",
+        try:
+            # ====================
+            # LOGIN
+            # ====================
+
+            page.goto("https://toquea.faast.pe/faast-reporting/reports#/", wait_until="networkidle")
+
+            page.wait_for_selector("#usuario", timeout=20_000)
+
+            page.fill("#usuario", usuario)
+            page.fill("#contraseña", password)
+
+            page.click("//button[contains(text(),'Ingresar')]")
+
+            # Espera explícita: que aparezca algún elemento del dashboard
+            # en lugar de un sleep fijo de 30 segundos
+            page.wait_for_selector(
+                "li.list-group-item",
+                timeout=40_000,
+                state="visible",
+            )
+
+            print("Login exitoso, dashboard cargado.")
+
+            # ====================
+            # REPORTE FACTURACION
+            # ====================
+
+            li_volumen = page.locator(
+                "li.list-group-item",
+                has=page.locator("text=Facturacion"),
+            ).first
+
+            li_volumen.wait_for(state="visible", timeout=20_000)
+
+            boton = li_volumen.locator("button", has_text="Ver Detalles")
+            boton.scroll_into_view_if_needed()
+            boton.click()
+
+            print("Accediendo al reporte Facturacion...")
+
+            # Esperar el iframe con el ReportServer
+            iframe_element = page.wait_for_selector(
+                "//iframe[contains(@src, 'ReportServer')]",
+                timeout=20_000,
+            )
+
+            frame = iframe_element.content_frame()
+
+            print("Dentro del iframe del reporte.")
+
+            # Setear la fecha de inicio directamente vía JS (igual que en Selenium)
+            frame.wait_for_selector(
+                "#ReportViewerControl_ctl04_ctl03_txtValue",
+                timeout=15_000,
+            )
+
+            frame.evaluate(
+                "document.getElementById('ReportViewerControl_ctl04_ctl03_txtValue').value = arguments[0];",
+                fecha_inicio,
+            )
+
+            print(f"Fecha desde seteada a: {fecha_inicio}")
+
+            frame.click(
+                "#ReportViewerControl_ctl04_ctl00",
+                timeout=10_000,
+            )
+
+            print("Clic en 'Ver informe'. Esperando generación...")
+
+            frame.wait_for_timeout(5_000)
+
+            # Desplegar menú de exportación
+            frame.click(
+                "#ReportViewerControl_ctl05_ctl04_ctl00_ButtonLink",
+                timeout=20_000,
+            )
+
+            print("Menú de exportación desplegado.")
+
+            # Iniciar descarga esperando el evento de download
+            with page.expect_download(timeout=30_000) as download_info:
+                frame.click(
+                    "//a[contains(text(), 'CSV (delimitado por comas)')]",
+                    timeout=10_000,
                 )
-            )
-        )
 
-        # Clic en Ver Detalles
-        boton = li_volumen.find_element(
-            By.XPATH, ".//button[contains(text(), 'Ver Detalles')]"
-        )
-        driver.execute_script("arguments[0].click();", boton)
+            download = download_info.value
 
-        print("Accediendo al reporte Recaudacion...")
+            # Guardar el archivo en la carpeta destino conservando el nombre original
+            dest = download_dir / download.suggested_filename
+            download.save_as(dest)
 
-        # ====================
-        # CAMBIAR A IFRAME
-        # ====================
+            print(f"Archivo descargado en: {dest}")
+            print("Exportación completada con éxito.")
 
-        iframe = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//iframe[contains(@src, 'ReportServer')]")
-            )
-        )
-        driver.switch_to.frame(iframe)
+            return True
 
-        print("Dentro del iframe del reporte.")
+        except PlaywrightTimeoutError as e:
+            print("=" * 80)
+            print("TIPO: PlaywrightTimeoutError")
+            print("ERROR:", repr(e))
+            print("=" * 80)
 
-        # ====================
-        # SETEAR FECHA DESDE (actual - 30 días)
-        # ====================
+            # Diagnóstico: screenshot + HTML para saber en qué pantalla falló
+            try:
+                page.screenshot(path="debug_error.png", full_page=True)
+                Path("debug_page.html").write_text(page.content(), encoding="utf-8")
+                print("Screenshot guardado en debug_error.png")
+                print("HTML guardado en debug_page.html")
+            except Exception:
+                pass
 
-        WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located(
-                (By.ID, "ReportViewerControl_ctl04_ctl03_txtValue")
-            )
-        )
+            traceback.print_exc()
+            return False
 
-        driver.execute_script(
-            "document.getElementById('ReportViewerControl_ctl04_ctl03_txtValue').value = arguments[0];",
-            fecha_inicio,
-        )
+        except Exception as e:
+            print("=" * 80)
+            print("TIPO:", type(e).__name__)
+            print("ERROR:", repr(e))
+            print("=" * 80)
 
-        print(f"Fecha desde seteada a: {fecha_inicio}")
+            try:
+                page.screenshot(path="debug_error.png", full_page=True)
+                Path("debug_page.html").write_text(page.content(), encoding="utf-8")
+            except Exception:
+                pass
 
-        # ====================
-        # VER INFORME
-        # ====================
+            traceback.print_exc()
+            return False
 
-        boton_ver_informe = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.ID, "ReportViewerControl_ctl04_ctl00"))
-        )
-        boton_ver_informe.click()
-
-        print("Clic en 'Ver informe'. Esperando generación...")
-
-        # Tiempo de espera hasta que se renderice el reporte
-        time.sleep(5)  # Puede reemplazarse con espera más inteligente
-
-        # ====================
-        # EXPORTAR A CSV
-        # ====================
-
-        # Clic en el botón de exportar
-        boton_exportar = WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable(
-                (By.ID, "ReportViewerControl_ctl05_ctl04_ctl00_ButtonLink")
-            )
-        )
-        driver.execute_script("arguments[0].click();", boton_exportar)
-
-        print("Menú de exportación desplegado.")
-
-        # Seleccionar CSV
-        opcion_csv = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//a[contains(text(), 'CSV (delimitado por comas)')]")
-            )
-        )
-        opcion_csv.click()
-
-        time.sleep(10)
-
-        print("Exportación completada con éxito.")
-
-        return True
-
-    except Exception as e:
-        print(f"Error durante la exportación: {e}")
-        return False
-
-    finally:
-        if "driver" in locals():
-            driver.quit()
-
-
-if __name__ == "__main__":
-    usuario = "dany.churapa@ajegroup.com"
-    password = "Faast123"
-
-    resultado = exports_csv(usuario, password)
+        finally:
+            context.close()
+            browser.close()

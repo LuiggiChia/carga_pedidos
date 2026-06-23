@@ -9,8 +9,8 @@ from datetime import datetime
 
 def move_file(usuario: str, password: str):
 
-    downloads_path = os.path.join(os.environ["USERPROFILE"], "Downloads")
-    destino_base = r"G:\Mi unidad\Reporteria\Data-Toquea\Factoring"
+    downloads_path = os.path.join(os.environ["USERPROFILE"], "Downloads") # Cambiar
+    destino_base = r"G:\Mi unidad\Reporteria\Data-Toquea\Factoring" # Cambiar
     result_export = exports_csv(usuario, password)
 
     if result_export:
