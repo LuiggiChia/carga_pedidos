@@ -1,8 +1,13 @@
 import os
+import io
 import json
-from google.oauth2.service_account import Credentials
+import pandas as pd
+from io import BytesIO
+from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from googleapiclient.http import MediaIoBaseUpload
+from google.oauth2.service_account import Credentials
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
@@ -64,3 +69,81 @@ def upload_file_to_drive(service, base_dir: str, logger):
     logger.info(f"ID: {file['id']}")
 
     return file["id"]
+
+
+def get_plantilla_carga_pedidos_and_upload_to_drive(
+    service,
+    base_dir: str,
+    df: pd.DataFrame,
+    logger,
+    day_of_report: datetime = datetime.now(),
+):
+
+    report_date = day_of_report.strftime("%Y%m%d")
+
+    credentials_folder_drive = os.path.join(
+        base_dir, "config", "credentials_folder_drive.json"
+    )
+
+    with open(credentials_folder_drive, "r", encoding="utf-8") as file:
+        folder_drive_credentials = json.load(file)
+
+    folder_id_utils = folder_drive_credentials["folder_id_utils"]
+    folder_id_factoring = folder_drive_credentials["folder_id_factoring"]
+
+    query = (
+        f"name = 'Plantilla Carga Pedidos.xlsx' "
+        f"and '{folder_id_utils}' in parents "
+        f"and trashed = false"
+    )
+
+    results = (
+        service.files()
+        .list(
+            q=query,
+            fields="files(id)",
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True,
+        )
+        .execute()
+    )
+
+    files = results.get("files", [])
+
+    if not files:
+        print("File 'Plantilla Carga Pedidos.xlsx' was not found.")
+        return None
+
+    file_id = files[0]["id"]
+
+    file_bytes = service.files().get_media(fileId=file_id).execute()
+
+    df_plantilla = pd.read_excel(io.BytesIO(file_bytes), engine="openpyxl")
+
+    df.columns = df_plantilla.columns
+
+    output = BytesIO()
+
+    df.to_excel(
+        output,
+        sheet_name="Carga Pedidos",
+        index=False,
+    )
+
+    output.seek(0)
+
+    media = MediaIoBaseUpload(
+        output,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    service.files().create(
+        body={
+            "name": f"CargaPedidos_{report_date}.xlsx",
+            "parents": [folder_id_factoring],
+        },
+        media_body=media,
+        supportsAllDrives=True,
+    ).execute()
+
+    logger.info(f"Se subío correctamente 'CargaPedidos_{report_date}.xlsx'")

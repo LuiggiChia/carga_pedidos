@@ -8,6 +8,7 @@ from src.utils.google_utils import (
     load_google_credentials,
     create_drive_service,
     upload_file_to_drive,
+    get_plantilla_carga_pedidos_and_upload_to_drive
 )
 
 from src.processing.facturacion_processor import facturacion_processor
@@ -46,4 +47,8 @@ if __name__ == "__main__":
     upload_file_to_drive(drive_service, project_path, logger)
 
     # Trasnformar la data
-    facturacion_processor(project_path)
+    df = facturacion_processor(project_path)
+
+    get_plantilla_carga_pedidos_and_upload_to_drive(
+        drive_service, project_path, df, logger
+    )

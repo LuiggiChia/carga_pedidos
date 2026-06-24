@@ -111,3 +111,4 @@ def facturacion_processor(base_dir):
     ]
 
     print(df.head(10))
+    return df
