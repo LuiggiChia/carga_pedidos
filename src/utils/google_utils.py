@@ -31,40 +31,43 @@ def create_drive_service(credentials, logger):
 
 
 def upload_file_to_drive(service, base_dir: str, logger):
+
     credentials_folder_drive = os.path.join(
-        base_dir, "config/credentials_folder_drive.json"
+        base_dir,
+        "config",
+        "credentials_folder_drive.json"
     )
+
     with open(credentials_folder_drive, "r", encoding="utf-8") as file:
         folder_drive_credentials = json.load(file)
 
     folder_id = folder_drive_credentials["folder_id_raw"]
-    try:
-        raw_path = os.path.join(base_dir, "data/raw")
 
-        csv_files = [f for f in os.listdir(raw_path) if f.endswith(".csv")]
+    raw_path = os.path.join(base_dir, "data", "raw")
 
-        if not csv_files:
-            raise FileNotFoundError(f"No se encontraron archivos CSV en {raw_path}")
+    csv_file = next(
+        f for f in os.listdir(raw_path)
+        if f.lower().endswith(".csv")
+    )
 
-        csv_path = os.path.join(raw_path, csv_files[0])
-        file_name = os.path.basename(csv_path)
+    file_path = os.path.join(raw_path, csv_file)
 
-        file_metadata = {"name": file_name, "parents": [folder_id]}
+    media = MediaFileUpload(
+        file_path,
+        mimetype="text/csv"
+    )
 
-        media = MediaFileUpload(csv_path, resumable=True)
+    file = service.files().create(
+        body={
+            "name": csv_file,
+            "parents": [folder_id]
+        },
+        media_body=media,
+        fields="id,name",
+        supportsAllDrives=True
+    ).execute()
 
-        file = (
-            service.files()
-            .create(body=file_metadata, media_body=media, fields="id,name")
-            .execute()
-        )
+    logger.info(f"Subido: {file['name']}")
+    logger.info(f"ID: {file['id']}")
 
-        logger.info(
-            f"Archivo subido correctamente. " f"ID={file['id']} Nombre={file['name']}"
-        )
-
-        return file["id"]
-
-    except Exception as e:
-        logger.error(f"Error subiendo archivo a Drive: {e}")
-        raise
+    return file["id"]
