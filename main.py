@@ -10,6 +10,8 @@ from src.utils.google_utils import (
     upload_file_to_drive,
 )
 
+from src.processing.facturacion_processor import facturacion_processor
+
 project_path = os.path.dirname(os.path.abspath(__file__))
 logs_path = os.path.join(project_path, "logs")
 log_filename = f"{datetime.now().strftime('%Y%m%d')}.log"
@@ -42,3 +44,6 @@ if __name__ == "__main__":
 
     # Subir el excel a mi drive
     upload_file_to_drive(drive_service, project_path, logger)
+
+    # Trasnformar la data
+    facturacion_processor(project_path)

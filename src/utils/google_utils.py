@@ -33,9 +33,7 @@ def create_drive_service(credentials, logger):
 def upload_file_to_drive(service, base_dir: str, logger):
 
     credentials_folder_drive = os.path.join(
-        base_dir,
-        "config",
-        "credentials_folder_drive.json"
+        base_dir, "config", "credentials_folder_drive.json"
     )
 
     with open(credentials_folder_drive, "r", encoding="utf-8") as file:
@@ -45,27 +43,22 @@ def upload_file_to_drive(service, base_dir: str, logger):
 
     raw_path = os.path.join(base_dir, "data", "raw")
 
-    csv_file = next(
-        f for f in os.listdir(raw_path)
-        if f.lower().endswith(".csv")
-    )
+    csv_file = next(f for f in os.listdir(raw_path) if f.lower().endswith(".csv"))
 
     file_path = os.path.join(raw_path, csv_file)
 
-    media = MediaFileUpload(
-        file_path,
-        mimetype="text/csv"
-    )
+    media = MediaFileUpload(file_path, mimetype="text/csv")
 
-    file = service.files().create(
-        body={
-            "name": csv_file,
-            "parents": [folder_id]
-        },
-        media_body=media,
-        fields="id,name",
-        supportsAllDrives=True
-    ).execute()
+    file = (
+        service.files()
+        .create(
+            body={"name": csv_file, "parents": [folder_id]},
+            media_body=media,
+            fields="id,name",
+            supportsAllDrives=True,
+        )
+        .execute()
+    )
 
     logger.info(f"Subido: {file['name']}")
     logger.info(f"ID: {file['id']}")
