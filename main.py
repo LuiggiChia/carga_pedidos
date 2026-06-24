@@ -8,10 +8,10 @@ from src.processing.facturacion_processor import facturacion_processor
 from src.processing.process_clients import (
     get_recent_clients_by_product,
     generate_nit_df,
-    generate_client_df
+    generate_client_df,
 )
 from src.ingestion.plantilla_carga_pedidos import (
-    get_plantilla_carga_pedidos_and_upload_to_drive,
+    upload_dataframe_to_template_drive,
 )
 from src.utils.date_utils import get_date_of_arg
 from src.utils.google_utils import (
@@ -33,7 +33,10 @@ credentials_folder_drive = os.path.join(
 with open(credentials_folder_drive, "r", encoding="utf-8") as file:
     folder_drive_credentials = json.load(file)
 
+folder_id_utils = folder_drive_credentials["folder_id_utils"]
+folder_id_factoring = folder_drive_credentials["folder_id_factoring"]
 folder_id_reports_factoring = folder_drive_credentials["folder_id_reports_factoring"]
+folder_id_conta_clientes = folder_drive_credentials["folder_id_conta_clientes"]
 
 # Configuraciones en general del proyecto
 config_project_path = os.path.join(project_path, "config", "project_config.json")
@@ -76,8 +79,15 @@ if __name__ == "__main__":
     df = facturacion_processor(project_path)
 
     # Subir el archivo al drive
-    get_plantilla_carga_pedidos_and_upload_to_drive(
-        drive_service, project_path, df, logger
+    upload_dataframe_to_template_drive(
+        service=drive_service,
+        df=df,
+        folder_id_utils=folder_id_utils,
+        folder_output_id=folder_id_factoring,
+        excel_input_name="Consolidado.xlsx",
+        sheet_name="Carga Pedidos",
+        excel_output_name="CargaPedidos",
+        logger=logger,
     )
 
     # Obtener Consolidado.xlsx
@@ -87,7 +97,28 @@ if __name__ == "__main__":
 
     # Aplicar transformacion al df obtenido
     df_grouped = get_recent_clients_by_product(file_bytes, product)
-    df_1 = generate_nit_df(df_grouped)
-    df_2 = generate_client_df(df_grouped)
-    print(df_1)
-    print(df_2)
+    df_nit = generate_nit_df(df_grouped)
+    df_carga_cliente = generate_client_df(df_grouped)
+
+    # Subir los archivos a drive
+    upload_dataframe_to_template_drive(
+        service=drive_service,
+        df=df_nit,
+        folder_id_utils=folder_id_utils,
+        folder_output_id=folder_id_conta_clientes,
+        excel_input_name="CARGARDOR NIT.xlsx",
+        sheet_name="Sheet1",
+        excel_output_name="CargaNIT",
+        logger=logger,
+    )
+
+    upload_dataframe_to_template_drive(
+        service=drive_service,
+        df=df_carga_cliente,
+        folder_id_utils=folder_id_utils,
+        folder_output_id=folder_id_conta_clientes,
+        excel_input_name="Cargador Dinámico Cliente",
+        sheet_name="Fibertech",
+        excel_output_name="CargaClientes",
+        logger=logger,
+    )

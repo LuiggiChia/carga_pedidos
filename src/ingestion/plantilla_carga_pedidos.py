@@ -7,30 +7,35 @@ from openpyxl import load_workbook
 from googleapiclient.http import MediaIoBaseUpload
 
 
-def get_plantilla_carga_pedidos_and_upload_to_drive(
+def upload_dataframe_to_template_drive(
     service,
-    base_dir: str,
+    # base_dir: str,
     df: pd.DataFrame,
+    folder_id_utils: str,
+    folder_output_id: str,
+    excel_input_name: str,
+    sheet_name: str,
+    excel_output_name: str,
     logger,
     day_of_report: datetime = datetime.now(),
 ):
 
     report_date = day_of_report.strftime("%Y%m%d")
 
-    credentials_folder_drive = os.path.join(
-        base_dir,
-        "config",
-        "credentials_folder_drive.json",
-    )
+    # credentials_folder_drive = os.path.join(
+    #     base_dir,
+    #     "config",
+    #     "credentials_folder_drive.json",
+    # )
 
-    with open(credentials_folder_drive, "r", encoding="utf-8") as file:
-        folder_drive_credentials = json.load(file)
+    # with open(credentials_folder_drive, "r", encoding="utf-8") as file:
+    #     folder_drive_credentials = json.load(file)
 
-    folder_id_utils = folder_drive_credentials["folder_id_utils"]
-    folder_id_factoring = folder_drive_credentials["folder_id_factoring"]
+    # folder_id_utils = folder_drive_credentials["folder_id_utils"]
+    # folder_id_factoring = folder_drive_credentials["folder_id_factoring"]
 
     query = (
-        f"name = 'Plantilla Carga Pedidos.xlsx' "
+        f"name = '{excel_input_name}' "
         f"and '{folder_id_utils}' in parents "
         f"and trashed = false"
     )
@@ -49,7 +54,7 @@ def get_plantilla_carga_pedidos_and_upload_to_drive(
     files = results.get("files", [])
 
     if not files:
-        logger.error("File 'Plantilla Carga Pedidos.xlsx' was not found.")
+        logger.error(f"File '{excel_input_name}' was not found.")
         return None
 
     file_id = files[0]["id"]
@@ -62,7 +67,8 @@ def get_plantilla_carga_pedidos_and_upload_to_drive(
 
     wb = load_workbook(excel_buffer)
 
-    ws = wb["Carga Pedidos"]
+    # ws = wb["Carga Pedidos"]
+    ws = wb[sheet_name]
 
     # Escribir datos desde fila 2
     for row_idx, row in enumerate(df.itertuples(index=False), start=2):
@@ -86,8 +92,8 @@ def get_plantilla_carga_pedidos_and_upload_to_drive(
         service.files()
         .create(
             body={
-                "name": f"CargaPedidos_{report_date}.xlsx",
-                "parents": [folder_id_factoring],
+                "name": f"{excel_output_name}_{report_date}.xlsx",
+                "parents": [folder_output_id],
             },
             media_body=media,
             supportsAllDrives=True,
