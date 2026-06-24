@@ -1,9 +1,9 @@
 import os
-import io
 import json
 import pandas as pd
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import datetime
+from openpyxl import load_workbook
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.http import MediaIoBaseUpload
@@ -82,7 +82,9 @@ def get_plantilla_carga_pedidos_and_upload_to_drive(
     report_date = day_of_report.strftime("%Y%m%d")
 
     credentials_folder_drive = os.path.join(
-        base_dir, "config", "credentials_folder_drive.json"
+        base_dir,
+        "config",
+        "credentials_folder_drive.json",
     )
 
     with open(credentials_folder_drive, "r", encoding="utf-8") as file:
@@ -111,39 +113,56 @@ def get_plantilla_carga_pedidos_and_upload_to_drive(
     files = results.get("files", [])
 
     if not files:
-        print("File 'Plantilla Carga Pedidos.xlsx' was not found.")
+        logger.error("File 'Plantilla Carga Pedidos.xlsx' was not found.")
         return None
 
     file_id = files[0]["id"]
 
+    # Descargar plantilla
     file_bytes = service.files().get_media(fileId=file_id).execute()
 
-    df_plantilla = pd.read_excel(io.BytesIO(file_bytes), engine="openpyxl")
+    # Abrir plantilla
+    excel_buffer = BytesIO(file_bytes)
 
-    df.columns = df_plantilla.columns
+    wb = load_workbook(excel_buffer)
 
+    ws = wb["Carga Pedidos"]
+
+    # Escribir datos desde fila 2
+    for row_idx, row in enumerate(df.itertuples(index=False), start=2):
+        for col_idx, value in enumerate(row, start=1):
+            ws.cell(row=row_idx, column=col_idx, value=value)
+
+    # Guardar workbook modificado en memoria
     output = BytesIO()
 
-    df.to_excel(
-        output,
-        sheet_name="Carga Pedidos",
-        index=False,
-    )
+    wb.save(output)
 
     output.seek(0)
 
+    # Subir archivo a Drive
     media = MediaIoBaseUpload(
         output,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
-    service.files().create(
-        body={
-            "name": f"CargaPedidos_{report_date}.xlsx",
-            "parents": [folder_id_factoring],
-        },
-        media_body=media,
-        supportsAllDrives=True,
-    ).execute()
+    uploaded_file = (
+        service.files()
+        .create(
+            body={
+                "name": f"CargaPedidos_{report_date}.xlsx",
+                "parents": [folder_id_factoring],
+            },
+            media_body=media,
+            supportsAllDrives=True,
+            fields="id,name",
+        )
+        .execute()
+    )
 
-    logger.info(f"Se subío correctamente 'CargaPedidos_{report_date}.xlsx'")
+    logger.info(
+        f"Se subió correctamente '{uploaded_file['name']}' "
+        f"(ID: {uploaded_file['id']})"
+    )
+
+    return uploaded_file["id"]
