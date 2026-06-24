@@ -117,7 +117,7 @@ if __name__ == "__main__":
         df=df_carga_cliente,
         folder_id_utils=folder_id_utils,
         folder_output_id=folder_id_conta_clientes,
-        excel_input_name="Cargador Dinámico Cliente",
+        excel_input_name="Cargador Dinámico Cliente.xlsx",
         sheet_name="Fibertech",
         excel_output_name="CargaClientes",
         logger=logger,
