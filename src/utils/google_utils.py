@@ -2,6 +2,7 @@ import os
 import json
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
@@ -29,16 +30,41 @@ def create_drive_service(credentials, logger):
     return service
 
 
-def create_folder(service, folder_name: str, logger):
-    logger.info(f"Creando carpeta: {folder_name}")
+def upload_file_to_drive(service, base_dir: str, logger):
+    credentials_folder_drive = os.path.join(
+        base_dir, "config/faacredentials_folder_drivest_credentials.json"
+    )
+    with open(credentials_folder_drive, "r", encoding="utf-8") as file:
+        folder_drive_credentials = json.load(file)
 
-    folder_metadata = {
-        "name": folder_name,
-        "mimeType": "application/vnd.google-apps.folder",
-    }
+    folder_id = folder_drive_credentials["folder_id_raw"]
+    try:
+        raw_path = os.path.join(base_dir, "data/raw")
 
-    folder = service.files().create(body=folder_metadata, fields="id,name").execute()
+        csv_files = [f for f in os.listdir(raw_path) if f.endswith(".csv")]
 
-    logger.info(f"Carpeta creada correctamente. ID: {folder['id']}")
+        if not csv_files:
+            raise FileNotFoundError(f"No se encontraron archivos CSV en {raw_path}")
 
-    return folder["id"]
+        csv_path = os.path.join(raw_path, csv_files[0])
+        file_name = os.path.basename(csv_path)
+
+        file_metadata = {"name": file_name, "parents": [folder_id]}
+
+        media = MediaFileUpload(csv_path, resumable=True)
+
+        file = (
+            service.files()
+            .create(body=file_metadata, media_body=media, fields="id,name")
+            .execute()
+        )
+
+        logger.info(
+            f"Archivo subido correctamente. " f"ID={file['id']} Nombre={file['name']}"
+        )
+
+        return file["id"]
+
+    except Exception as e:
+        logger.error(f"Error subiendo archivo a Drive: {e}")
+        raise

@@ -28,29 +28,40 @@ def inner_playwrite(
         page.get_by_role("textbox", name="Contraseña").fill(password)
         page.get_by_role("textbox", name="Contraseña").press("Enter")
         logger.info("-- Ingreso a la web")
-        page.locator("[id=\"2\"]").get_by_text("Reportes", exact=True).click()
+        page.locator('[id="2"]').get_by_text("Reportes", exact=True).click()
         page.locator("a").filter(has_text="Reportes Backoffice").click()
         logger.info("-- Entro a reporte")
-        page.get_by_role("listitem").filter(has_text="FacturacionVer Detalles").get_by_role("button").click()
-        page.locator("iframe").content_frame.get_by_role("textbox", name="Desde").click()
+        page.get_by_role("listitem").filter(
+            has_text="FacturacionVer Detalles"
+        ).get_by_role("button").click()
+        page.locator("iframe").content_frame.get_by_role(
+            "textbox", name="Desde"
+        ).click()
         input_desde_hasta = dia_de_reporte.strftime("%m/%d/%Y")
-        page.locator("iframe").content_frame.get_by_role("textbox", name="Desde").fill(input_desde_hasta)
-        page.locator("iframe").content_frame.get_by_role("textbox", name="Desde").press("Tab")
+        page.locator("iframe").content_frame.get_by_role("textbox", name="Desde").fill(
+            input_desde_hasta
+        )
+        page.locator("iframe").content_frame.get_by_role("textbox", name="Desde").press(
+            "Tab"
+        )
         page.wait_for_timeout(10000)
-        page.locator("iframe").content_frame.get_by_role("textbox", name="Hasta").click()
-        page.locator("iframe").content_frame.get_by_role("textbox", name="Hasta").fill(input_desde_hasta)
+        page.locator("iframe").content_frame.get_by_role(
+            "textbox", name="Hasta"
+        ).click()
+        page.locator("iframe").content_frame.get_by_role("textbox", name="Hasta").fill(
+            input_desde_hasta
+        )
         page.wait_for_timeout(10000)
         frame = page.frame_locator("iframe")
         frame.locator("#ReportViewerControl_ctl04_ctl00").scroll_into_view_if_needed()
         frame.locator("#ReportViewerControl_ctl04_ctl00").click(force=True)
         page.wait_for_timeout(6000)
         logger.info("-- Se ve informe")
-        frame.locator("#ReportViewerControl_ctl05_ctl04_ctl00_ButtonImg").click(force=True)
+        frame.locator("#ReportViewerControl_ctl05_ctl04_ctl00_ButtonImg").click(
+            force=True
+        )
         with page.expect_download() as download_info:
-            frame.get_by_role(
-                "link",
-                name="CSV (comma delimited)"
-            ).click()
+            frame.get_by_role("link", name="CSV (comma delimited)").click()
 
         download = download_info.value
         raw_data_path = os.path.join(BASE_DIR, "data/raw")
