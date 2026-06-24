@@ -89,3 +89,5 @@ if __name__ == "__main__":
     df_grouped = get_recent_clients_by_product(file_bytes, product)
     df_1 = generate_nit_df(df_grouped)
     df_2 = generate_client_df(df_grouped)
+    print(df_1)
+    print(df_2)
