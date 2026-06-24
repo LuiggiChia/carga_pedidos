@@ -32,7 +32,7 @@ def create_drive_service(credentials, logger):
 
 def upload_file_to_drive(service, base_dir: str, logger):
     credentials_folder_drive = os.path.join(
-        base_dir, "config/faacredentials_folder_drivest_credentials.json"
+        base_dir, "config/credentials_folder_drive.json"
     )
     with open(credentials_folder_drive, "r", encoding="utf-8") as file:
         folder_drive_credentials = json.load(file)
