@@ -111,7 +111,7 @@ if __name__ == "__main__":
     )
 
     # Eliminar archivo csv
-    for file in os.listdir(p):
+    for file in os.listdir(raw_data_path):
         os.remove(os.path.join(raw_data_path, file))
 
     # Obtener Consolidado.xlsx
