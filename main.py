@@ -67,7 +67,7 @@ if __name__ == "__main__":
     if not project_date:
         fecha_de_reporte = get_date_of_arg()
     else:
-        fecha_de_reporte = project_date
+        fecha_de_reporte = datetime.strptime(project_date, "%d/%m/%Y")
 
     # Leer credenciales
     credentials = load_google_credentials(project_path, logger)
