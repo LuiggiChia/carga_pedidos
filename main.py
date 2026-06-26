@@ -25,6 +25,7 @@ from src.utils.google_utils import (
 )
 
 project_path = os.path.dirname(os.path.abspath(__file__))
+raw_data_path = os.path.join(project_path, "data/raw")
 logs_path = os.path.join(project_path, "logs")
 log_filename = f"{datetime.now().strftime('%Y%m%d')}.log"
 
@@ -108,6 +109,10 @@ if __name__ == "__main__":
         logger=logger,
         day_of_report=project_date
     )
+
+    # Eliminar archivo csv
+    for file in os.listdir(p):
+        os.remove(os.path.join(raw_data_path, file))
 
     # Obtener Consolidado.xlsx
     # file_bytes = get_report_from_drive(
