@@ -94,6 +94,7 @@ if __name__ == "__main__":
         sheet_name="Carga Pedidos",
         excel_output_name="CargaPedidosFactoring",
         logger=logger,
+        day_of_report=project_date
     )
 
     upload_dataframe_to_template_drive(
@@ -105,6 +106,7 @@ if __name__ == "__main__":
         sheet_name="Carga Pedidos",
         excel_output_name="CargaPedidosConfirming",
         logger=logger,
+        day_of_report=project_date
     )
 
     # Obtener Consolidado.xlsx
