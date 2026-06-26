@@ -23,8 +23,8 @@ def facturacion_processor_confirming(base_dir):
     df["articulo"] = df["descripcion"].str.split(" ").str[0]
     df["articulo"] = df["articulo"].replace(
         {
-            "COMISIONES": "S00039",
-            "INTERESES": "S00040",
+            "COMISIONES": "S00040",
+            "INTERESES": "S00039",
         }
     )
 
