@@ -48,6 +48,7 @@ with open(config_project_path, "r", encoding="utf-8") as file:
     config_project = json.load(file)
 
 product = config_project["product"]
+project_date = config_project["project_date"]
 
 logging.basicConfig(
     level=logging.INFO,
@@ -63,7 +64,10 @@ logger = logging.getLogger(__name__)
 if __name__ == "__main__":
 
     # Obtener fecha
-    fecha_de_reporte = get_date_of_arg()
+    if not project_date:
+        fecha_de_reporte = get_date_of_arg()
+    else:
+        fecha_de_reporte = project_date
 
     # Leer credenciales
     credentials = load_google_credentials(project_path, logger)
