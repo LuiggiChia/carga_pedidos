@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from src.extraction.scrapping_facturacion_faast import exports_csv
 from src.processing.facturacion_processor import (
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     if not project_date:
         fecha_de_reporte = get_date_of_arg()
     else:
-        fecha_de_reporte = datetime.strptime(project_date, "%d/%m/%Y")
+        fecha_de_reporte = datetime.strptime(project_date, "%d/%m/%Y") - timedelta(days=1)
 
     # Leer credenciales
     credentials = load_google_credentials(project_path, logger)
