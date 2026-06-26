@@ -20,6 +20,9 @@ def upload_dataframe_to_template_drive(
     day_of_report: datetime = datetime.now(),
 ):
 
+    if isinstance(day_of_report, str):
+        day_of_report = datetime.strptime(day_of_report, "%d/%m/%Y")
+
     report_date = day_of_report.strftime("%Y%m%d")
 
     # credentials_folder_drive = os.path.join(
