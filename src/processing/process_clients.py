@@ -11,7 +11,7 @@ def get_recent_clients_by_product(file_bytes, product: str):
 
     df = pd.read_excel(io.BytesIO(file_bytes), engine="openpyxl")
 
-    df = df[df["Tipo"] == product]
+    df = df[df["producto"] == product]
 
     grouped = (
         df.groupby(["rut_cliente", "razon_social_cliente"])

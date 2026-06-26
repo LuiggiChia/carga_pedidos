@@ -4,7 +4,10 @@ import logging
 from datetime import datetime
 
 from src.extraction.scrapping_facturacion_faast import exports_csv
-from src.processing.facturacion_processor import facturacion_processor
+from src.processing.facturacion_processor import (
+    facturacion_processor_factoring,
+    facturacion_processor_confirming
+)
 from src.processing.process_clients import (
     get_recent_clients_by_product,
     generate_nit_df,
@@ -58,8 +61,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    cur = ["PEN"]
-    print("Obtener Facturacion")
 
     # Obtener fecha
     fecha_de_reporte = get_date_of_arg()
@@ -76,49 +77,61 @@ if __name__ == "__main__":
     upload_file_to_drive(drive_service, project_path, logger)
 
     # Transformar la data
-    df = facturacion_processor(project_path)
+    df_factoring = facturacion_processor_factoring(project_path)
+    df_confirming = facturacion_processor_confirming(project_path)
 
     # Subir el archivo al drive
     upload_dataframe_to_template_drive(
         service=drive_service,
-        df=df,
+        df=df_factoring,
         folder_id_utils=folder_id_utils,
         folder_output_id=folder_id_factoring,
         excel_input_name="Plantilla Carga Pedidos.xlsx",
         sheet_name="Carga Pedidos",
-        excel_output_name="CargaPedidos",
+        excel_output_name="CargaPedidosFactoring",
+        logger=logger,
+    )
+
+    upload_dataframe_to_template_drive(
+        service=drive_service,
+        df=df_confirming,
+        folder_id_utils=folder_id_utils,
+        folder_output_id=folder_id_factoring,
+        excel_input_name="Plantilla Carga Pedidos.xlsx",
+        sheet_name="Carga Pedidos",
+        excel_output_name="CargaPedidosConfirming",
         logger=logger,
     )
 
     # Obtener Consolidado.xlsx
-    file_bytes = get_report_from_drive(
-        drive_service, folder_id_reports_factoring, "Consolidado.xlsx"
-    )
+    # file_bytes = get_report_from_drive(
+    #     drive_service, folder_id_reports_factoring, "newConsolidado.xlsx"
+    # )
 
     # Aplicar transformacion al df obtenido
-    df_grouped = get_recent_clients_by_product(file_bytes, product)
-    df_nit = generate_nit_df(df_grouped)
-    df_carga_cliente = generate_client_df(df_grouped)
+    # df_grouped = get_recent_clients_by_product(file_bytes, product)
+    # df_nit = generate_nit_df(df_grouped)
+    # df_carga_cliente = generate_client_df(df_grouped)
 
     # Subir los archivos a drive
-    upload_dataframe_to_template_drive(
-        service=drive_service,
-        df=df_nit,
-        folder_id_utils=folder_id_utils,
-        folder_output_id=folder_id_conta_clientes,
-        excel_input_name="CARGARDOR NIT.xlsx",
-        sheet_name="Sheet1",
-        excel_output_name="CargaNIT",
-        logger=logger,
-    )
+    # upload_dataframe_to_template_drive(
+    #     service=drive_service,
+    #     df=df_nit,
+    #     folder_id_utils=folder_id_utils,
+    #     folder_output_id=folder_id_conta_clientes,
+    #     excel_input_name="CARGARDOR NIT.xlsx",
+    #     sheet_name="Sheet1",
+    #     excel_output_name="CargaNIT",
+    #     logger=logger,
+    # )
 
-    upload_dataframe_to_template_drive(
-        service=drive_service,
-        df=df_carga_cliente,
-        folder_id_utils=folder_id_utils,
-        folder_output_id=folder_id_conta_clientes,
-        excel_input_name="Cargador Dinámico Cliente.xlsx",
-        sheet_name="Fibertech",
-        excel_output_name="CargaClientes",
-        logger=logger,
-    )
+    # upload_dataframe_to_template_drive(
+    #     service=drive_service,
+    #     df=df_carga_cliente,
+    #     folder_id_utils=folder_id_utils,
+    #     folder_output_id=folder_id_conta_clientes,
+    #     excel_input_name="Cargador Dinámico Cliente.xlsx",
+    #     sheet_name="Fibertech",
+    #     excel_output_name="CargaClientes",
+    #     logger=logger,
+    # )
