@@ -62,8 +62,8 @@ def facturacion_processor_confirming(base_dir):
         )
     )
 
-    # Asignar nuevo nu_operacion para S00024
-    mask_interest = df["articulo"] == "S00024"
+    # Asignar nuevo nu_operacion para S00039
+    mask_interest = df["articulo"] == "S00039"
 
     existing_max = pd.to_numeric(df["nu_operacion"], errors="coerce").max()
     start = int(existing_max) + 1 if not pd.isna(existing_max) else 1
