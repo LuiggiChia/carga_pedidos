@@ -3,6 +3,22 @@ import pandas as pd
 
 
 def facturacion_processor_confirming(base_dir):
+
+    month_map = {
+        "jan": 1,
+        "feb": 2,
+        "mar": 3,
+        "apr": 4,
+        "may": 5,
+        "jun": 6,
+        "jul": 7,
+        "aug": 8,
+        "sep": 9,
+        "oct": 10,
+        "nov": 11,
+        "dec": 12,
+    }
+
     raw_path = os.path.join(base_dir, "data", "raw")
 
     csv_file = next(f for f in os.listdir(raw_path) if f.lower().endswith(".csv"))
@@ -18,9 +34,11 @@ def facturacion_processor_confirming(base_dir):
 
     df = pd.read_csv(csv_path, skiprows=rows_to_skip)
 
+    # Filtrar Confirming
     df = df[df["co_tipo_movimiento"].str.strip() == "CF"].copy()
 
-    df["articulo"] = df["descripcion"].str.split(" ").str[0]
+    # Obtener artículo
+    df["articulo"] = df["descripcion"].str.split().str[0]
     df["articulo"] = df["articulo"].replace(
         {
             "COMISIONES": "S00040",
@@ -28,11 +46,13 @@ def facturacion_processor_confirming(base_dir):
         }
     )
 
+    # Obtener mes
     df["mes"] = df["descripcion"].str.lower().str.extract(
         r"(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)",
         expand=False,
     )
 
+    # Limpiar subtotal
     df["sub_total"] = (
         df["sub_total"]
         .astype(str)
@@ -41,6 +61,7 @@ def facturacion_processor_confirming(base_dir):
 
     df["sub_total"] = pd.to_numeric(df["sub_total"], errors="coerce")
 
+    # Agrupar
     df = (
         df.groupby(
             [
@@ -62,16 +83,48 @@ def facturacion_processor_confirming(base_dir):
         )
     )
 
-    # Asignar nuevo nu_operacion para S00039
-    mask_interest = df["articulo"] == "S00039"
+    # ==========================================
+    # NUEVA LÓGICA PARA nu_operacion
+    # ==========================================
 
-    existing_max = pd.to_numeric(df["nu_operacion"], errors="coerce").max()
-    start = int(existing_max) + 1 if not pd.isna(existing_max) else 1
+    # Extraer el día de la descripción
+    df["dia"] = (
+        df["descripcion"]
+        .str.extract(r"CONFIRMING\s+(\d+)", expand=False)
+        .astype(int)
+    )
 
-    n_interest = mask_interest.sum()
+    # Obtener el menor día por mes
+    dias_por_mes = (
+        df.groupby("mes", as_index=False)["dia"]
+        .min()
+    )
 
-    if n_interest > 0:
-        df.loc[mask_interest, "nu_operacion"] = range(start, start + n_interest)
+    # Ordenar meses
+    dias_por_mes["mes_num"] = dias_por_mes["mes"].map(month_map)
+    dias_por_mes = dias_por_mes.sort_values("mes_num")
+
+    # El número inicial será el día del primer mes
+    numero_inicial = dias_por_mes["dia"].iloc[0]
+
+    # Asignar número de operación consecutivo por mes
+    dias_por_mes["nu_operacion"] = range(
+        numero_inicial,
+        numero_inicial + len(dias_por_mes)
+    )
+
+    # Reemplazar nu_operacion
+    df = df.drop(columns=["nu_operacion"])
+
+    df = df.merge(
+        dias_por_mes[["mes", "nu_operacion"]],
+        on="mes",
+        how="left",
+    )
+
+    # ==========================================
+    # Completar columnas
+    # ==========================================
 
     df["precio"] = df["moneda"].replace(
         {
