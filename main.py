@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 import logging
 from datetime import datetime, timedelta
 
@@ -29,6 +30,7 @@ from src.utils.google_utils import (
 
 project_path = os.path.dirname(os.path.abspath(__file__))
 raw_data_path = os.path.join(project_path, "data/raw")
+bronze_data_path = os.path.join(project_path, "data/bronze")
 logs_path = os.path.join(project_path, "logs")
 log_filename = f"{datetime.now().strftime('%Y%m%d')}.log"
 
@@ -53,7 +55,6 @@ with open(config_project_path, "r", encoding="utf-8") as file:
 
 product = config_project["product"]
 project_date = config_project["project_date"]
-facturacion_path = config_project["facturacion_path"]
 
 logging.basicConfig(
     level=logging.INFO,
@@ -117,9 +118,12 @@ if __name__ == "__main__":
             day_of_report=fecha_de_reporte
         )
 
-    # Eliminar archivo csv
-    for file in os.listdir(raw_data_path):
-        os.remove(os.path.join(raw_data_path, file))
+    # Mover archivo archivo csv
+    csv_file = next(f for f in os.listdir(raw_data_path) if f.lower().endswith(".csv"))
+    shutil.move(
+        os.path.join(raw_data_path, csv_file),
+        os.path.join(bronze_data_path, csv_file),
+    )
 
     # Obtener Consolidado.xlsx
     file_bytes = get_report_from_drive(
@@ -130,7 +134,7 @@ if __name__ == "__main__":
     df_grouped = get_recent_clients_by_product(file_bytes, product)
     df_nit = generate_nit_df(df_grouped)
     df_carga_cliente = generate_client_df(df_grouped)
-    df_email_facturacion = email_facturacion(facturacion_path)
+    df_email_facturacion = email_facturacion(bronze_data_path)
     print(df_carga_cliente.head())
     print(df_email_facturacion)
 
