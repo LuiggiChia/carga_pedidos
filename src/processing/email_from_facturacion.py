@@ -3,10 +3,7 @@ import pandas as pd
 
 
 def email_facturacion(base_dir):
-    facturacion_path = os.path.join(
-        base_dir, "Reports", "Faast", "output", "Facturacion"
-    )
-
+    facturacion_path = base_dir
     dfs = []
 
     for file in os.listdir(facturacion_path):

@@ -10,8 +10,6 @@ def get_recent_clients_by_product(file_bytes, product: str):
     yesterday = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
 
     df = pd.read_excel(io.BytesIO(file_bytes), engine="openpyxl")
-    print(df.head())
-    print(df.columns)
 
     df = df[df["Tipo"] == product]
 

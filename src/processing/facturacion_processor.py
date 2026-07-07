@@ -312,6 +312,4 @@ def facturacion_processor_factoring(base_dir):
             "campo_vacio",
         ]
     ]
-
-    print(df.head(10))
     return df
