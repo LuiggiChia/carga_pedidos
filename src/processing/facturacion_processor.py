@@ -36,8 +36,9 @@ def facturacion_processor_confirming(base_dir):
 
     # Filtrar Confirming
     df = df[df["co_tipo_movimiento"].str.strip() == "CF"].copy()
-    print("Reporte de Confirming")
-    print(df.head())
+    if df.empty:
+        print("No hay registros para confirming")
+        return pd.DataFrame()
 
     # Obtener artículo
     df["articulo"] = df["descripcion"].str.split().str[0]
@@ -218,6 +219,9 @@ def facturacion_processor_factoring(base_dir):
     df = pd.read_csv(csv_path, skiprows=rows_to_skip)
 
     df = df[df["co_tipo_movimiento"].str.strip() == "GI"]
+    if df.empty:
+        print("No hay registros para factoring")
+        return pd.DataFrame()
 
     df["articulo"] = df["descripcion"].str.split(" ").str[0]
 

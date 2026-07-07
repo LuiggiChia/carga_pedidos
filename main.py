@@ -90,29 +90,31 @@ if __name__ == "__main__":
     df_confirming = facturacion_processor_confirming(project_path)
 
     # Subir el archivo al drive
-    upload_dataframe_to_template_drive(
-        service=drive_service,
-        df=df_factoring,
-        folder_id_utils=folder_id_utils,
-        folder_output_id=folder_id_factoring,
-        excel_input_name="Plantilla Carga Pedidos.xlsx",
-        sheet_name="Carga Pedidos",
-        excel_output_name="CargaPedidosFactoring",
-        logger=logger,
-        day_of_report=project_date
-    )
+    if not df_factoring.empty:
+        upload_dataframe_to_template_drive(
+            service=drive_service,
+            df=df_factoring,
+            folder_id_utils=folder_id_utils,
+            folder_output_id=folder_id_factoring,
+            excel_input_name="Plantilla Carga Pedidos.xlsx",
+            sheet_name="Carga Pedidos",
+            excel_output_name="CargaPedidosFactoring",
+            logger=logger,
+            day_of_report=project_date
+        )
 
-    upload_dataframe_to_template_drive(
-        service=drive_service,
-        df=df_confirming,
-        folder_id_utils=folder_id_utils,
-        folder_output_id=folder_id_factoring,
-        excel_input_name="Plantilla Carga Pedidos.xlsx",
-        sheet_name="Carga Pedidos",
-        excel_output_name="CargaPedidosConfirming",
-        logger=logger,
-        day_of_report=project_date
-    )
+    if not df_confirming.empty():
+        upload_dataframe_to_template_drive(
+            service=drive_service,
+            df=df_confirming,
+            folder_id_utils=folder_id_utils,
+            folder_output_id=folder_id_factoring,
+            excel_input_name="Plantilla Carga Pedidos.xlsx",
+            sheet_name="Carga Pedidos",
+            excel_output_name="CargaPedidosConfirming",
+            logger=logger,
+            day_of_report=project_date
+        )
 
     # Eliminar archivo csv
     for file in os.listdir(raw_data_path):
