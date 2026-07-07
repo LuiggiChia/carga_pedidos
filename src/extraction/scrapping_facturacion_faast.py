@@ -20,7 +20,11 @@ def inner_playwrite(
     context = browser.new_context()
     page = context.new_page()
     try:
-        page.goto("https://toquea.faast.pe/")
+        page.goto(
+            "https://toquea.faast.pe/",
+            timeout=90000,
+            wait_until="domcontentloaded",
+        )
         page.set_default_timeout(30000)
         page.get_by_role("textbox", name="Nombre de Usuario").click()
         page.get_by_role("textbox", name="Nombre de Usuario").fill(usuario)
