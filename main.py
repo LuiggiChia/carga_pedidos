@@ -53,6 +53,7 @@ with open(config_project_path, "r", encoding="utf-8") as file:
 
 product = config_project["product"]
 project_date = config_project["project_date"]
+facturacion_path = config_project["facturacion_path"]
 
 logging.basicConfig(
     level=logging.INFO,
@@ -126,6 +127,9 @@ if __name__ == "__main__":
     df_grouped = get_recent_clients_by_product(file_bytes, product)
     df_nit = generate_nit_df(df_grouped)
     df_carga_cliente = generate_client_df(df_grouped)
+    df_email_facturacion = email_facturacion(facturacion_path)
+    print(df_carga_cliente.head())
+    print(df_email_facturacion)
 
     # Subir los archivos a drive
     upload_dataframe_to_template_drive(
