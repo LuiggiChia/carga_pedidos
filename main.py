@@ -141,6 +141,7 @@ if __name__ == "__main__":
         .astype(str)
         .str.strip()
     )
+    df_carga_cliente = generate_client_df(df_grouped, df_email_facturacion)
 
     # Subir los archivos a drive
     upload_dataframe_to_template_drive(
