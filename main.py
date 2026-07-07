@@ -136,6 +136,7 @@ if __name__ == "__main__":
     df_carga_cliente = generate_client_df(df_grouped)
     df_email_facturacion = email_facturacion(bronze_data_path)
     print(df_carga_cliente.head())
+    print(df_carga_cliente.columns)
     print(df_email_facturacion)
 
     # Subir los archivos a drive
