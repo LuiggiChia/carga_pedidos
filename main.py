@@ -91,7 +91,7 @@ if __name__ == "__main__":
     df_confirming = facturacion_processor_confirming(project_path)
 
     # Subir el archivo al drive
-    if not df_factoring.empty():
+    if not df_factoring.empty:
         upload_dataframe_to_template_drive(
             service=drive_service,
             df=df_factoring,
@@ -104,7 +104,7 @@ if __name__ == "__main__":
             day_of_report=fecha_de_reporte
         )
 
-    if not df_confirming.empty():
+    if not df_confirming.empty:
         upload_dataframe_to_template_drive(
             service=drive_service,
             df=df_confirming,
