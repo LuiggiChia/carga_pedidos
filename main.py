@@ -73,6 +73,7 @@ if __name__ == "__main__":
         fecha_de_reporte = get_date_of_arg()
     else:
         fecha_de_reporte = datetime.strptime(project_date, "%d/%m/%Y") - timedelta(days=1)
+    print(f"Fecha Reporte: {fecha_de_reporte}")
 
     # Leer credenciales
     credentials = load_google_credentials(project_path, logger)
@@ -100,7 +101,7 @@ if __name__ == "__main__":
             sheet_name="Carga Pedidos",
             excel_output_name="CargaPedidosFactoring",
             logger=logger,
-            day_of_report=project_date
+            day_of_report=fecha_de_reporte
         )
 
     if not df_confirming.empty():
@@ -113,7 +114,7 @@ if __name__ == "__main__":
             sheet_name="Carga Pedidos",
             excel_output_name="CargaPedidosConfirming",
             logger=logger,
-            day_of_report=project_date
+            day_of_report=fecha_de_reporte
         )
 
     # Eliminar archivo csv
