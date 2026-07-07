@@ -136,7 +136,11 @@ if __name__ == "__main__":
 
     df_email_facturacion = email_facturacion(bronze_data_path)
     df_email_facturacion["E-mail"] = df_email_facturacion["E-mail"].fillna("-")
-    df_carga_cliente = generate_client_df(df_grouped, df_email_facturacion)
+    df_email_facturacion["Cliente"] = (
+        df_email_facturacion["Cliente"]
+        .astype(str)
+        .str.strip()
+    )
 
     # Subir los archivos a drive
     upload_dataframe_to_template_drive(
