@@ -44,7 +44,7 @@ def generate_nit_df(grouped):
     return result
 
 
-def generate_client_df(grouped):
+def generate_client_df(grouped, df_email_facturacion):
     clientes = grouped["rut_cliente"].astype(str).str.strip()
     nombre = grouped["razon_social_cliente"].astype(str).str.strip()
     alias = nombre.copy()
@@ -112,6 +112,17 @@ def generate_client_df(grouped):
             "Usa Dirección de Embarque de Corp": "",
         }
     )
+
+    result = result.merge(
+        df_email_facturacion[["Cliente", "E-mail"]],
+        on="Cliente",
+        how="left",
+        suffixes=("", "_nuevo"),
+    )
+
+    result["E-mail"] = result["E-mail_nuevo"].fillna("")
+    result = result.drop(columns=["E-mail_nuevo"])
+
     result = result.drop_duplicates(subset="Cliente").reset_index(drop=True)
 
     print("Client DataFrame generated with", len(result), "unique Clients.")
