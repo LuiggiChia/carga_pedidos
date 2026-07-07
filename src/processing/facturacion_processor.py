@@ -36,6 +36,8 @@ def facturacion_processor_confirming(base_dir):
 
     # Filtrar Confirming
     df = df[df["co_tipo_movimiento"].str.strip() == "CF"].copy()
+    print("Reporte de Confirming")
+    print(df.head())
 
     # Obtener artículo
     df["articulo"] = df["descripcion"].str.split().str[0]
