@@ -13,7 +13,7 @@ def get_recent_clients_by_product(file_bytes, product: str):
     print(df.head())
     print(df.columns)
 
-    df = df[df["producto"] == product]
+    df = df[df["Tipo"] == product]
 
     grouped = (
         df.groupby(["rut_cliente", "razon_social_cliente"])
