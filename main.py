@@ -8,6 +8,9 @@ from src.processing.facturacion_processor import (
     facturacion_processor_factoring,
     facturacion_processor_confirming
 )
+from src.processing.email_from_facturacion import (
+    email_facturacion
+)
 from src.processing.process_clients import (
     get_recent_clients_by_product,
     generate_nit_df,
@@ -115,34 +118,34 @@ if __name__ == "__main__":
         os.remove(os.path.join(raw_data_path, file))
 
     # Obtener Consolidado.xlsx
-    # file_bytes = get_report_from_drive(
-    #     drive_service, folder_id_reports_factoring, "newConsolidado.xlsx"
-    # )
+    file_bytes = get_report_from_drive(
+        drive_service, folder_id_reports_factoring, "Consolidado.xlsx"
+    )
 
     # Aplicar transformacion al df obtenido
-    # df_grouped = get_recent_clients_by_product(file_bytes, product)
-    # df_nit = generate_nit_df(df_grouped)
-    # df_carga_cliente = generate_client_df(df_grouped)
+    df_grouped = get_recent_clients_by_product(file_bytes, product)
+    df_nit = generate_nit_df(df_grouped)
+    df_carga_cliente = generate_client_df(df_grouped)
 
     # Subir los archivos a drive
-    # upload_dataframe_to_template_drive(
-    #     service=drive_service,
-    #     df=df_nit,
-    #     folder_id_utils=folder_id_utils,
-    #     folder_output_id=folder_id_conta_clientes,
-    #     excel_input_name="CARGARDOR NIT.xlsx",
-    #     sheet_name="Sheet1",
-    #     excel_output_name="CargaNIT",
-    #     logger=logger,
-    # )
+    upload_dataframe_to_template_drive(
+        service=drive_service,
+        df=df_nit,
+        folder_id_utils=folder_id_utils,
+        folder_output_id=folder_id_conta_clientes,
+        excel_input_name="CARGARDOR NIT.xlsx",
+        sheet_name="Sheet1",
+        excel_output_name="CargaNIT",
+        logger=logger,
+    )
 
-    # upload_dataframe_to_template_drive(
-    #     service=drive_service,
-    #     df=df_carga_cliente,
-    #     folder_id_utils=folder_id_utils,
-    #     folder_output_id=folder_id_conta_clientes,
-    #     excel_input_name="Cargador Dinámico Cliente.xlsx",
-    #     sheet_name="Fibertech",
-    #     excel_output_name="CargaClientes",
-    #     logger=logger,
-    # )
+    upload_dataframe_to_template_drive(
+        service=drive_service,
+        df=df_carga_cliente,
+        folder_id_utils=folder_id_utils,
+        folder_output_id=folder_id_conta_clientes,
+        excel_input_name="Cargador Dinámico Cliente.xlsx",
+        sheet_name="Fibertech",
+        excel_output_name="CargaClientes",
+        logger=logger,
+    )
